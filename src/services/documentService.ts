@@ -10,8 +10,8 @@ class DocumentService {
       size: 2048576,
       category: 'Specifications',
       tags: ['project', 'requirements'],
-      uploadDate: new Date('2024-01-15'),
-      lastModified: new Date('2024-01-15'),
+      uploadDate: '2024-01-15T00:00:00.000Z',
+      lastModified: '2024-01-15T00:00:00.000Z',
       author: 'John Doe',
       projectId: 'proj-1',
       isFavorite: false,
@@ -25,8 +25,8 @@ class DocumentService {
       size: 5242880,
       category: 'Drawings',
       tags: ['architecture', 'design'],
-      uploadDate: new Date('2024-01-14'),
-      lastModified: new Date('2024-01-14'),
+      uploadDate: '2024-01-14T00:00:00.000Z',
+      lastModified: '2024-01-14T00:00:00.000Z',
       author: 'Jane Smith',
       projectId: 'proj-1',
       isFavorite: true,
@@ -40,8 +40,8 @@ class DocumentService {
       size: 102400,
       category: 'Documentation',
       tags: ['meeting', 'notes'],
-      uploadDate: new Date('2024-01-13'),
-      lastModified: new Date('2024-01-13'),
+      uploadDate: '2024-01-13T00:00:00.000Z',
+      lastModified: '2024-01-13T00:00:00.000Z',
       author: 'Mike Johnson',
       projectId: 'proj-2',
       isFavorite: false,
@@ -106,10 +106,13 @@ class DocumentService {
       }
       
       if (filters.dateRange) {
-        filteredDocuments = filteredDocuments.filter(doc => 
-          doc.uploadDate >= filters.dateRange!.start && 
-          doc.uploadDate <= filters.dateRange!.end
-        );
+        const startDate = new Date(filters.dateRange.start);
+        const endDate = new Date(filters.dateRange.end);
+        
+        filteredDocuments = filteredDocuments.filter(doc => {
+          const docDate = new Date(doc.uploadDate);
+          return docDate >= startDate && docDate <= endDate;
+        });
       }
     }
 
@@ -121,12 +124,11 @@ class DocumentService {
       let aValue = (a as any)[sortBy];
       let bValue = (b as any)[sortBy];
       
-      if (aValue instanceof Date) {
-        aValue = aValue.getTime();
-        bValue = bValue.getTime();
-      }
-      
-      if (typeof aValue === 'string') {
+      // Handle date strings
+      if (sortBy === 'uploadDate' || sortBy === 'lastModified') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      } else if (typeof aValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
@@ -165,6 +167,7 @@ class DocumentService {
       }
     }
 
+    const now = new Date().toISOString();
     const document: Document = {
       id: uuidv4(),
       name: file.name,
@@ -172,8 +175,8 @@ class DocumentService {
       size: file.size,
       category: metadata.category || 'Uncategorized',
       tags: metadata.tags || [],
-      uploadDate: new Date(),
-      lastModified: new Date(),
+      uploadDate: now,
+      lastModified: now,
       author: metadata.author || 'Current User',
       projectId: metadata.projectId,
       isFavorite: false,
@@ -196,7 +199,7 @@ class DocumentService {
     this.documents[index] = {
       ...this.documents[index],
       ...updates,
-      lastModified: new Date(),
+      lastModified: new Date().toISOString(),
     };
 
     return this.documents[index];
